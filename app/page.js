@@ -1,11 +1,9 @@
 import RainHistory from './features/rain-history/RainHistory';
 
-function App() {
+export default function Page() {
   return (
     <div>
       <RainHistory />
     </div>
   );
 }
-
-export default App;
