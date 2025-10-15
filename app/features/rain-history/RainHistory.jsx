@@ -12,7 +12,7 @@ function RainHistory() {
   const fetchData = () => {
     if (!latitude || !longitude) return;
     setLoading(true);
-    fetch(`https://localhost:7086/RainHistory/RainyDays?latitude=${latitude}&longitude=${longitude}`)
+    fetch(`/api/rain-history/rainy-days?latitude=${latitude}&longitude=${longitude}`)
       .then(response => response.json())
       .then(json => {
         setStation(json);
