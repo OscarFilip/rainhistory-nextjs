@@ -14,11 +14,38 @@ export async function GET(request) {
       );
     }
 
-    const data = await getRainyDays(parseFloat(latitude), parseFloat(longitude));
+    const lat = parseFloat(latitude);
+    const lon = parseFloat(longitude);
+
+    // Validate coordinates
+    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      return NextResponse.json(
+        { error: 'Invalid latitude or longitude values' },
+        { status: 400 }
+      );
+    }
+
+    const data = await getRainyDays(lat, lon);
     
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error in rain history API:', error);
+    
+    // Handle specific error types
+    if (error.message === 'No weather stations available') {
+      return NextResponse.json(
+        { error: 'No weather stations available' },
+        { status: 500 }
+      );
+    }
+    
+    if (error.message === 'No nearby weather station found') {
+      return NextResponse.json(
+        { error: 'No nearby weather station found' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
