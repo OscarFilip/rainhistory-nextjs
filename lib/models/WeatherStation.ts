@@ -1,17 +1,6 @@
 // Define types for better type safety
 export type RainFallMeasurement = [Date, number];
 
-export interface WeatherStationData {
-  id?: number | null;
-  key?: string;
-  name?: string;
-  title?: string;
-  latitude?: number;
-  longitude?: number;
-  active?: boolean;
-  rainFallMeasurements?: RainFallMeasurement[];
-}
-
 export class WeatherStation {
   public id: number | null;
   public key: string;
@@ -22,7 +11,7 @@ export class WeatherStation {
   public active: boolean;
   public rainFallMeasurements: RainFallMeasurement[];
 
-  constructor(data: WeatherStationData = {}) {
+  constructor(data: Partial<WeatherStation> = {}) {
     this.id = data.id ?? null;
     this.key = data.key ?? '';
     this.name = data.name ?? '';
