@@ -1,12 +1,20 @@
+export interface RequestOptions extends RequestInit {
+  headers?: Record<string, string>;
+  responseType?: 'json' | 'text';
+}
+
 export class ApiClient {
-  constructor(baseURL, defaultHeaders = {}) {
+  private baseURL: string;
+  private defaultHeaders: Record<string, string>
+
+  constructor(baseURL: string, defaultHeaders: Record<string, string> = {}) {
     this.baseURL = baseURL;
     this.defaultHeaders = defaultHeaders;
   }
 
-  async request(endpoint, options = {}) {
+  async request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const config = {
+    const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
         ...this.defaultHeaders,
@@ -16,7 +24,7 @@ export class ApiClient {
     };
 
     try {
-      const response = await fetch(url, config);
+      const response: Response = await fetch(url, config);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -25,7 +33,7 @@ export class ApiClient {
       // Handle different response types
       const responseType = options.responseType || 'json';
       if (responseType === 'text') {
-        return await response.text();
+        return await response.text() as T;
       }
       
       return await response.json();
@@ -35,20 +43,20 @@ export class ApiClient {
     }
   }
 
-  get(endpoint, headers = {}) {
+  get<T = any>(endpoint: string, headers: Record<string, string> = {}): Promise<T> {
     return this.request(endpoint, { method: 'GET', headers });
   }
 
-  getText(endpoint, headers = {}) {
-    return this.request(endpoint, { 
+  getText(endpoint: string, headers: Record<string, string> = {}): Promise<string> {
+    return this.request<string>(endpoint, { 
       method: 'GET', 
       headers,
       responseType: 'text' 
     });
   }
 
-  post(endpoint, data, headers = {}) {
-    return this.request(endpoint, {
+  post<T = any>(endpoint: string, data: any, headers: Record<string, string> = {}): Promise<T> {
+    return this.request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
       headers,
