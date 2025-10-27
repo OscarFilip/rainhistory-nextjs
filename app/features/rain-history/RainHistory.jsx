@@ -133,7 +133,7 @@ function RainHistory() {
                       {new Date(item.date).toLocaleDateString()}
                     </td>
                     <td className="py-2 px-4 border-b text-right">
-                      {item.rainFall}
+                      {Math.round(item.rainFall * 10) / 10}
                     </td>
                   </tr>
                 ))}
