@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRainyDays } from '../../../../lib/services/rainHistoryService.js';
+import { getRainyDays } from '../../../../lib/services/rainHistoryService.ts';
 
 export async function GET(request) {
   try {
