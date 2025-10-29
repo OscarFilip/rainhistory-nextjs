@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getRainyDays } from '../../../../lib/services/rainHistoryService.ts';
+import { getRainyDays } from '../../../../lib/services/rainHistoryService';
+import { validateCoordinates } from '../../../../lib/utils/validation';
 
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const latitude = searchParams.get('latitude');
@@ -17,13 +18,7 @@ export async function GET(request) {
     const lat = parseFloat(latitude);
     const lon = parseFloat(longitude);
 
-    // Validate coordinates
-    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-      return NextResponse.json(
-        { error: 'Invalid latitude or longitude values' },
-        { status: 400 }
-      );
-    }
+    validateCoordinates(lat, lon);
 
     const data = await getRainyDays(lat, lon);
     
@@ -31,7 +26,15 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error in rain history API:', error);
     
-    // Handle specific error types
+    if (error.message.includes('Latitude') || 
+        error.message.includes('longitude') || 
+        error.message.includes('degrees')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
+
     if (error.message === 'No weather stations available') {
       return NextResponse.json(
         { error: 'No weather stations available' },

@@ -1,16 +1,33 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { JSX, useState } from 'react';
 import RainHistoryChart from './RainHistoryChart';
+import { RainFallMeasurement, WeatherStation } from '../../../lib/models/WeatherStation';
 
-function RainHistory() {
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [station, setStation] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+interface ApiRainMeasurement {
+  date: string;
+  rainFall: number;
+}
 
-  const fetchData = async () => {
+interface ApiWeatherStationResponse {
+  id: number | null;
+  key: string;
+  name: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  active: boolean;
+  rainFallMeasurements: ApiRainMeasurement[];
+}
+
+function RainHistory(): JSX.Element {
+  const [latitude, setLatitude] = useState<string>('');
+  const [longitude, setLongitude] = useState<string>('');
+  const [station, setStation] = useState<WeatherStation | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async (): Promise<void> => {
     if (!latitude || !longitude) return;
     
     setLoading(true);
@@ -18,15 +35,23 @@ function RainHistory() {
     setError(null);
     
     try {
-      const response = await fetch(`/api/rain-history/rainy-days?latitude=${latitude}&longitude=${longitude}`);
+      const response = await fetch(`/api/weather-history/rainy-days?latitude=${latitude}&longitude=${longitude}`);
       
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
       
-      const data = await response.json();
-      setStation(data);
+      const apiData: ApiWeatherStationResponse = await response.json();
+
+      const weatherStation = new WeatherStation({
+        ...apiData,
+        rainFallMeasurements: apiData.rainFallMeasurements.map(
+          (item): RainFallMeasurement => [new Date(item.date), item.rainFall]
+        )
+      });
+
+      setStation(weatherStation);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError(error.message);
@@ -35,12 +60,19 @@ function RainHistory() {
     }
   };
 
-  const sortedData = station?.rainFallMeasurements
-    ? [...station.rainFallMeasurements].sort((a, b) => {
-        // Sort by date (newest first)
-        return new Date(b.date) - new Date(a.date);
-      })
+  const sortedData: ApiRainMeasurement[] = station?.rainFallMeasurements
+    ? station.rainFallMeasurements
+        .map(([date, rainFall]): ApiRainMeasurement => ({
+          date: date.toISOString(),
+          rainFall
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     : [];
+
+  const handleLocationClick = (lat: string, lon: string): void => {
+      setLatitude(lat);
+      setLongitude(lon);
+    };
 
   return (
     <div className="max-w-2xl mx-auto mt-8 font-sans">
@@ -49,19 +81,19 @@ function RainHistory() {
       {/* Quick Location Buttons */}
       <div className="flex gap-2 mb-4 justify-center flex-wrap">
         <button
-          onClick={() => {setLatitude('57.1134'); setLongitude('12.7732');}}
+          onClick={() => handleLocationClick('57.1134', '12.7732')}
           className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded"
         >
           Ullared, Sweden
         </button>
         <button
-          onClick={() => {setLatitude('59.3293'); setLongitude('18.0686');}}
+          onClick={() => handleLocationClick('59.3293', '18.0686')}
           className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded"
         >
           Stockholm
         </button>
         <button
-          onClick={() => {setLatitude('57.7089'); setLongitude('11.9746');}}
+          onClick={() => handleLocationClick('57.7089', '11.9746')}
           className="px-3 py-1 text-sm bg-gray-200 hover:bg-gray-300 rounded"
         >
           Gothenburg
@@ -73,14 +105,14 @@ function RainHistory() {
           type="text"
           placeholder="Latitude"
           value={latitude}
-          onChange={e => setLatitude(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLatitude(e.target.value)}
           className="px-3 py-2 rounded border border-gray-300 w-32 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <input
           type="text"
           placeholder="Longitude"
           value={longitude}
-          onChange={e => setLongitude(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLongitude(e.target.value)}
           className="px-3 py-2 rounded border border-gray-300 w-32 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <button

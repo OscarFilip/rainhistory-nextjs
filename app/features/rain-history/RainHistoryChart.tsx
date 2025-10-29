@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { JSX } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -13,9 +13,16 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-function RainHistoryChart({ data }) {
+interface RainHistoryChartProps {
+  data: Array<{
+    date: string;
+    rainFall: number;
+  }>;
+}
+
+function RainHistoryChart({ data }: RainHistoryChartProps): JSX.Element {
   // Show the latest 30 days
-  const sorted = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const sorted = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const recent = sorted.slice(-30);
 
   const chartData = {
@@ -25,8 +32,8 @@ function RainHistoryChart({ data }) {
         label: 'Rainfall (mm)',
         data: recent.map(item => item.rainFall),
         backgroundColor: 'rgba(37, 99, 235, 0.7)',
-        barPercentage: 1.2,        // Thinner bars
-        categoryPercentage: 0.3,   // Less spacing between bars
+        barPercentage: 1.2,
+        categoryPercentage: 0.3,
       },
     ],
   };
@@ -38,13 +45,12 @@ function RainHistoryChart({ data }) {
     },
     scales: {
       y: { beginAtZero: true, title: { display: true, text: 'mm' } },
-    //   x: { title: { display: true, text: 'Date' } }
-    x: {
+      x: {
         title: { display: true, text: 'Date' },
         ticks: {
           autoSkip: false,
-          maxTicksLimit: 10, // Show only 10 date labels
-          maxRotation: 60,   // Rotate labels for clarity
+          maxTicksLimit: 10,
+          maxRotation: 60,
           minRotation: 45,
         },
       },

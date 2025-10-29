@@ -20,8 +20,6 @@ export async function getRainyDays(latitude: number, longitude: number): Promise
   const repository = new WeatherDataRepository();
   
   try {
-    validateCoordinates(latitude, longitude);
-
     const stationsData = await repository.getAvailableStationsAsync();
     
     if (!stationsData?.station || stationsData.station.length === 0) {
