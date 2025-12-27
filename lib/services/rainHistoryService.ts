@@ -16,11 +16,13 @@ interface RainDataResponse {
   }>;
 }
 
+// TODO: Change this function to get rain and temp data.
+// Rename to 'getHistoricalWeatherData'?
 export async function getRainyDays(latitude: number, longitude: number): Promise<RainDataResponse> {
   const repository = new WeatherDataRepository();
   
   try {
-    const stationsData = await repository.getAvailableStationsAsync();
+    const stationsData = await repository.getAvailableStationsAsync(WeatherDataRepository.PARAMETER_RAINFALL);
     
     if (!stationsData?.station || stationsData.station.length === 0) {
       throw new Error('No weather stations available');

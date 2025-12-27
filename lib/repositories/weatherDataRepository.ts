@@ -19,21 +19,23 @@ export class WeatherDataRepository {
   private period: string;
   private apiClient: ApiClient;
 
+  public static readonly PARAMETER_RAINFALL = '7';
+  public static readonly PARAMETER_TEMPERATURE = '2';
+
   constructor() {
     this.version = 'latest';
-    this.parameter = '7';
     this.period = 'latest-months';
     this.apiClient = new ApiClient('https://opendata-download-metobs.smhi.se/api');
   }
 
-  public async getAvailableStationsAsync(): Promise<StationsResponse> {
-    const url = `/version/${this.version}/parameter/${this.parameter}.json`;
+  public async getAvailableStationsAsync(parameter: string): Promise<StationsResponse> {
+    const url = `/version/${this.version}/parameter/${parameter}.json`;
     return await this.apiClient.get<StationsResponse>(url);
   }
 
   public async getDailyRainAmountsLast3MonthsAsync(station: WeatherStation): Promise<WeatherStation> {
     const key = station.key;
-    const url = `/version/${this.version}/parameter/${this.parameter}/station/${station.key}/period/${this.period}/data.csv`;
+    const url = `/version/${this.version}/parameter/${WeatherDataRepository.PARAMETER_RAINFALL}/station/${station.key}/period/${this.period}/data.csv`;
 
     try {
       const csvText = await this.apiClient.getText(url);
@@ -94,4 +96,64 @@ export class WeatherDataRepository {
       return station;
     }
   }
+
+  public async getDailyAverageTemperatureAsync(station: WeatherStation): Promise<WeatherStation> {
+  const url = `/version/${this.version}/parameter/${WeatherDataRepository.PARAMETER_TEMPERATURE}/station/${station.key}/period/${this.period}/data.csv`;
+
+  try {
+    const csvText = await this.apiClient.getText(url);
+    
+    const dailyTemperature = new Map<string, number>();
+    const lines = csvText.split('\n');
+    let dataSection = false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threeMonthsAgo = new Date(today);
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    for (const line of lines) {
+      if (!dataSection) {
+        const trimmed = line.trim().replace('\uFEFF', '');
+        if (trimmed.startsWith('Från Datum Tid (UTC);Till Datum Tid (UTC);Representativt dygn;Lufttemperatur')) {
+          dataSection = true;
+          continue;
+        }
+        continue;
+      }
+
+      const columns = line.split(';');
+      if (columns.length < 4) continue;
+
+      const dateStr = columns[2]?.trim(); // "Representativt dygn" column
+      const temperatureStr = columns[3]?.trim(); // "Lufttemperatur" column
+      
+      if (!dateStr || !temperatureStr) continue;
+
+      const date = new Date(dateStr);
+      const temperature = parseFloat(temperatureStr);
+
+      if (isNaN(date.getTime()) || isNaN(temperature)) continue;
+
+      if (date >= threeMonthsAgo && date <= today) {
+        const dateKey = date.toISOString().split('T')[0];
+        
+        dailyTemperature.set(dateKey, temperature);
+      }
+    }
+
+    const mappedEntries: Array<[Date, number]> = Array.from(dailyTemperature.entries())
+      .map(([dateStr, temperature]) => [new Date(dateStr), temperature] as [Date, number]);
+
+    const sortedTemperature: Array<[Date, number]> = mappedEntries
+      .sort((a, b) => a[0].getTime() - b[0].getTime());
+      
+    (station as any).temperatureMeasurements = sortedTemperature;
+    return station;
+
+  } catch (error) {
+    console.error(`Failed to fetch or parse daily temperature for station ${station.key}:`, error);
+    return station;
+  }
+}
 }
