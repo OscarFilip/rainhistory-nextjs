@@ -1,33 +1,23 @@
 import { WeatherDataRepository } from '../repositories/weatherDataRepository';
 import { WeatherStation } from '../models/WeatherStation';
 
+interface BaseWeatherStation {
+  id: number | null;
+  key: string;
+  name: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  active: boolean;
+}
+
 interface WeatherDataResponse {
-  rainStation: {
-    id: number | null;
-    key: string;
-    name: string;
-    title: string;
-    latitude: number;
-    longitude: number;
-    active: boolean;
-    rainFallMeasurements: Array<{
-      date: string; // ISO string instead of Date object
-      rainFall: number;
-    }>;
-  } | null;
-  temperatureStation: {
-    id: number | null;
-    key: string;
-    name: string;
-    title: string;
-    latitude: number;
-    longitude: number;
-    active: boolean;
-    temperatureMeasurements: Array<{
-      date: string; // ISO string instead of Date object
-      temperature: number;
-    }>;
-  } | null;
+  rainStation: (BaseWeatherStation & {
+    rainFallMeasurements: Array<{ date: string; rainFall: number }>;
+  }) | null;
+  temperatureStation: (BaseWeatherStation & {
+    temperatureMeasurements: Array<{ date: string; temperature: number }>;
+  }) | null;
 }
 
 export async function getHistoricalWeatherData(latitude: number, longitude: number): Promise<WeatherDataResponse> {
