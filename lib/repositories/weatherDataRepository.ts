@@ -15,7 +15,6 @@ interface StationsResponse {
 
 export class WeatherDataRepository {
   private version: string;
-  private parameter: string;
   private period: string;
   private apiClient: ApiClient;
 
