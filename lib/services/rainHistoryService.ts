@@ -1,6 +1,5 @@
 import { WeatherDataRepository } from '../repositories/weatherDataRepository';
 import { WeatherStation } from '../models/WeatherStation';
-import { validateCoordinates } from '../utils/validation';
 
 interface WeatherDataResponse {
   rainStation: {
@@ -31,8 +30,6 @@ interface WeatherDataResponse {
   } | null;
 }
 
-// TODO: Change this function to get rain and temp data.
-// Rename to 'getHistoricalWeatherData'?
 export async function getHistoricalWeatherData(latitude: number, longitude: number): Promise<WeatherDataResponse> {
   const repository = new WeatherDataRepository();
   
@@ -120,12 +117,36 @@ export async function getHistoricalWeatherData(latitude: number, longitude: numb
     }
 
     return {
-      rainStation,
-      temperatureStation
+      rainStation: rainStation ? transformWeatherStationForApi(rainStation, true, false) : null,
+      temperatureStation: temperatureStation ? transformWeatherStationForApi(temperatureStation, false, true) : null
     };
 
   } catch (error) {
     console.error('Error in getHistoricalWeatherData:', error);
     throw error;
   }
+}
+
+function transformWeatherStationForApi(station: WeatherStation, includeRain: boolean = false, includeTemp: boolean = false) {
+  return {
+    id: station.id,
+    key: station.key,
+    name: station.name,
+    title: station.title,
+    latitude: station.latitude,
+    longitude: station.longitude,
+    active: station.active,
+    ...(includeRain && {
+      rainFallMeasurements: station.rainFallMeasurements?.map(([date, rainFall]) => ({
+        date: date.toISOString(),
+        rainFall
+      })) || []
+    }),
+    ...(includeTemp && {
+      temperatureMeasurements: (station as any).temperatureMeasurements?.map(([date, temperature]: [Date, number]) => ({
+        date: date.toISOString(),
+        temperature
+      })) || []
+    })
+  };
 }

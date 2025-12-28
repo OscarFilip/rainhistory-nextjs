@@ -30,7 +30,17 @@ export class WeatherDataRepository {
 
   public async getAvailableStationsAsync(parameter: string): Promise<StationsResponse> {
     const url = `/version/${this.version}/parameter/${parameter}.json`;
-    return await this.apiClient.get<StationsResponse>(url);
+    const response = await this.apiClient.get<StationsResponse>(url);
+    
+    // Filter out inactive stations
+    const totalStations = response.station?.length || 0;
+    const activeStations = response.station?.filter(s => s.active) || [];
+    
+    console.log(`📊 Parameter ${parameter} stations - Total: ${totalStations}, Active: ${activeStations.length}, Inactive: ${totalStations - activeStations.length}`);
+    
+    return {
+      station: activeStations
+    };
   }
 
   public async getDailyRainAmountsLast3MonthsAsync(station: WeatherStation): Promise<WeatherStation> {
