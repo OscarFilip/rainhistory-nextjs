@@ -97,7 +97,7 @@ export class WeatherDataRepository {
     }
   }
 
-  public async getDailyAverageTemperatureAsync(station: WeatherStation): Promise<WeatherStation> {
+  public async getDailyAverageTemperatureLast3MonthsAsync(station: WeatherStation): Promise<WeatherStation> {
   const url = `/version/${this.version}/parameter/${WeatherDataRepository.PARAMETER_TEMPERATURE}/station/${station.key}/period/${this.period}/data.csv`;
 
   try {
