@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRainyDays } from '../../../../lib/services/rainHistoryService';
+import { getHistoricalWeatherData } from '../../../../lib/services/rainHistoryService';
 import { validateCoordinates } from '../../../../lib/utils/validation';
 
 export async function GET(request: Request) {
@@ -20,11 +20,11 @@ export async function GET(request: Request) {
 
     validateCoordinates(lat, lon);
 
-    const data = await getRainyDays(lat, lon);
+    const data = await getHistoricalWeatherData(lat, lon);
     
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in rain history API:', error);
+    console.error('Error in weather history API:', error);
     
     if (error.message.includes('Latitude') || 
         error.message.includes('longitude') || 

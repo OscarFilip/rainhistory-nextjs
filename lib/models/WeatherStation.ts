@@ -1,5 +1,6 @@
-// Define types for better type safety
 export type RainFallMeasurement = [Date, number];
+
+export type DailyAverageTemperatureMeasurements = [Date, number];
 
 export class WeatherStation {
   public id: number | null;
@@ -10,6 +11,7 @@ export class WeatherStation {
   public longitude: number;
   public active: boolean;
   public rainFallMeasurements: RainFallMeasurement[];
+  public dailyAverageTemperatureMeasurements: DailyAverageTemperatureMeasurements[]; 
 
   constructor(data: Partial<WeatherStation> = {}) {
     this.id = data.id ?? null;
@@ -20,6 +22,7 @@ export class WeatherStation {
     this.longitude = data.longitude ?? 0;
     this.active = data.active ?? true;
     this.rainFallMeasurements = data.rainFallMeasurements ?? [];
+    this.dailyAverageTemperatureMeasurements = data.dailyAverageTemperatureMeasurements ?? [];
   }
 
   public static findClosestStation(
