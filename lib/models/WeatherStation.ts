@@ -1,10 +1,10 @@
+export type WeatherStationKey = string;
 export type RainFallMeasurement = [Date, number];
-
 export type DailyAverageTemperatureMeasurements = [Date, number];
 
 export class WeatherStation {
   public id: number | null;
-  public key: string;
+  public key: WeatherStationKey;
   public name: string;
   public title: string;
   public latitude: number;
